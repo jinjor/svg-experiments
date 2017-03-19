@@ -8597,47 +8597,54 @@ var _elm_lang$svg$Svg_Events$onMouseMove = _elm_lang$svg$Svg_Events$simpleOn('mo
 var _elm_lang$svg$Svg_Events$onMouseOut = _elm_lang$svg$Svg_Events$simpleOn('mouseout');
 var _elm_lang$svg$Svg_Events$onMouseOver = _elm_lang$svg$Svg_Events$simpleOn('mouseover');
 var _elm_lang$svg$Svg_Events$onMouseUp = _elm_lang$svg$Svg_Events$simpleOn('mouseup');
-var _user$project$SvgView$viewPath = function (positions) {
-	return function (value) {
-		return A2(
-			_elm_lang$svg$Svg$path,
-			{
-				ctor: '::',
-				_0: _elm_lang$svg$Svg_Attributes$stroke('black'),
-				_1: {
-					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$d(value),
-					_1: {ctor: '[]'}
-				}
-			},
-			{ctor: '[]'});
-	}(
+var _user$project$SvgView$toFixed = function (_p0) {
+	return _elm_lang$core$Basics$toString(
 		A3(
 			_elm_lang$core$Basics$flip,
 			F2(
 				function (x, y) {
-					return A2(_elm_lang$core$Basics_ops['++'], x, y);
+					return x / y;
 				}),
-			'z',
-			A2(
-				_elm_lang$core$String$join,
-				'',
-				_elm_lang$core$Array$toList(
+			10.0,
+			_elm_lang$core$Basics$toFloat(
+				_elm_lang$core$Basics$round(
 					A2(
-						_elm_lang$core$Array$indexedMap,
 						F2(
-							function (index, pos) {
-								return A2(
-									_elm_lang$core$Basics_ops['++'],
-									_elm_lang$core$Native_Utils.eq(index, 0) ? 'M' : 'L',
-									pos);
+							function (x, y) {
+								return x * y;
 							}),
-						A2(
-							_elm_lang$core$Array$filter,
-							function (_p0) {
-								return !_elm_lang$core$String$isEmpty(_p0);
-							},
-							positions))))));
+						10.0,
+						_p0)))));
+};
+var _user$project$SvgView$formatPath = function (positions) {
+	return (_elm_lang$core$Native_Utils.cmp(
+		_elm_lang$core$List$length(positions),
+		2) < 0) ? '' : A3(
+		_elm_lang$core$Basics$flip,
+		F2(
+			function (x, y) {
+				return A2(_elm_lang$core$Basics_ops['++'], x, y);
+			}),
+		'z',
+		A2(
+			_elm_lang$core$String$join,
+			'',
+			A2(
+				_elm_lang$core$List$indexedMap,
+				F2(
+					function (index, pos) {
+						return A2(
+							_elm_lang$core$Basics_ops['++'],
+							_elm_lang$core$Native_Utils.eq(index, 0) ? 'M' : 'L',
+							A2(
+								_elm_lang$core$Basics_ops['++'],
+								_user$project$SvgView$toFixed(pos.x),
+								A2(
+									_elm_lang$core$Basics_ops['++'],
+									',',
+									_user$project$SvgView$toFixed(pos.y))));
+					}),
+				positions)));
 };
 var _user$project$SvgView$viewBoxValue = function (dp) {
 	return A2(
@@ -8665,7 +8672,7 @@ var _user$project$SvgView$viewBoxValue = function (dp) {
 			}));
 };
 var _user$project$SvgView$viewSvg = F2(
-	function (dp, positions) {
+	function (dp, pathString) {
 		return A2(
 			_elm_lang$svg$Svg$svg,
 			{
@@ -8690,7 +8697,18 @@ var _user$project$SvgView$viewSvg = F2(
 			},
 			{
 				ctor: '::',
-				_0: _user$project$SvgView$viewPath(positions),
+				_0: A2(
+					_elm_lang$svg$Svg$path,
+					{
+						ctor: '::',
+						_0: _elm_lang$svg$Svg_Attributes$stroke('black'),
+						_1: {
+							ctor: '::',
+							_0: _elm_lang$svg$Svg_Attributes$d(pathString),
+							_1: {ctor: '[]'}
+						}
+					},
+					{ctor: '[]'}),
 				_1: {ctor: '[]'}
 			});
 	});
@@ -8710,8 +8728,51 @@ var _user$project$SvgView$horizontal = A2(
 		_1: {ctor: '[]'}
 	},
 	{ctor: '[]'});
-var _user$project$SvgView$view = F2(
-	function (dp, positions) {
+var _user$project$SvgView$Position = F2(
+	function (a, b) {
+		return {x: a, y: b};
+	});
+var _user$project$SvgView$rotate = F2(
+	function (theta, _p1) {
+		var _p2 = _p1;
+		var _p4 = _p2.y;
+		var _p3 = _p2.x;
+		return A2(
+			_user$project$SvgView$Position,
+			(_p3 * _elm_lang$core$Basics$cos(theta)) - (_p4 * _elm_lang$core$Basics$sin(theta)),
+			(_p3 * _elm_lang$core$Basics$sin(theta)) + (_p4 * _elm_lang$core$Basics$cos(theta)));
+	});
+var _user$project$SvgView$copyRotation = F2(
+	function (rotation, positions) {
+		var theta = (2 * _elm_lang$core$Basics$pi) / _elm_lang$core$Basics$toFloat(rotation);
+		return A2(
+			_elm_lang$core$List$concatMap,
+			function (theta) {
+				return A2(
+					_elm_lang$core$List$map,
+					_user$project$SvgView$rotate(theta),
+					positions);
+			},
+			A2(
+				_elm_lang$core$List$map,
+				function (_p5) {
+					return A2(
+						F2(
+							function (x, y) {
+								return x * y;
+							}),
+						theta,
+						_elm_lang$core$Basics$toFloat(_p5));
+				},
+				A2(_elm_lang$core$List$range, 0, rotation - 1)));
+	});
+var _user$project$SvgView$view = F3(
+	function (dp, rotation, positions) {
+		var pathString = _user$project$SvgView$formatPath(
+			A2(
+				_user$project$SvgView$copyRotation,
+				A2(_elm_lang$core$Maybe$withDefault, 1, rotation),
+				positions));
 		return A2(
 			_elm_lang$html$Html$div,
 			{
@@ -8727,46 +8788,36 @@ var _user$project$SvgView$view = F2(
 					_0: _user$project$SvgView$vertical,
 					_1: {
 						ctor: '::',
-						_0: A2(_user$project$SvgView$viewSvg, dp, positions),
-						_1: {ctor: '[]'}
+						_0: A2(_user$project$SvgView$viewSvg, dp, pathString),
+						_1: {
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html$div,
+								{ctor: '[]'},
+								{
+									ctor: '::',
+									_0: _elm_lang$svg$Svg$text(pathString),
+									_1: {ctor: '[]'}
+								}),
+							_1: {ctor: '[]'}
+						}
 					}
 				}
 			});
 	});
-var _user$project$SvgView$Position = F2(
-	function (a, b) {
-		return {x: a, y: b};
-	});
-var _user$project$Main$styles = '\n.container {\n  display: flex;\n}\n.container > * {\n  margin: 10px;\n}\n.form {\n  width: 30%;\n  height: 100%;\n}\n.svg-container {\n  border: solid 1px #aaa;\n  position: relative;\n  width: 200px;\n  height: 200px;\n}\nsvg {\n  width: 200px;\n  height: 200px;\n}\n.horizontal {\n  border-top: dashed 1px #ddd;\n  top: 50%;\n  width: 100%;\n  position: absolute;\n}\n.vertical {\n  border-left: dashed 1px #ddd;\n  left: 50%;\n  height: 100%;\n  position: absolute;\n}\n.param {\n  display: flex;\n  line-height: 30px;\n  margin-bottom: 5px;\n}\n.param > label {\n  width: 100px;\n  text-align: right;\n  padding-right: 10px;\n}\n.param > input {\n  width: 100%;\n}\n';
-var _user$project$Main$update = F2(
-	function (msg, model) {
-		var _p0 = msg;
-		return _elm_lang$core$Native_Utils.update(
-			model,
-			{
-				positions: A3(_elm_lang$core$Array$set, _p0._0, _p0._1, model.positions)
-			});
-	});
-var _user$project$Main$Model = F2(
-	function (a, b) {
-		return {dp: a, positions: b};
-	});
-var _user$project$Main$model = A2(
-	_user$project$Main$Model,
-	48,
-	_elm_lang$core$Array$fromList(
-		A2(_elm_lang$core$List$repeat, 10, '')));
-var _user$project$Main$Input = F2(
-	function (a, b) {
-		return {ctor: 'Input', _0: a, _1: b};
-	});
-var _user$project$Main$paramInput = F2(
-	function (index, _p1) {
+var _user$project$Main$styles = '\n.container {\n  display: flex;\n}\n.container > * {\n  margin: 10px;\n}\n.form-positions {\n  width: 100px;\n  height: 100%;\n}\n.form-options {\n  width: 200px;\n  height: 100%;\n}\n.svg-container {\n  border: solid 1px #aaa;\n  position: relative;\n  width: 200px;\n  height: 200px;\n}\nsvg {\n  width: 200px;\n  height: 200px;\n}\n.horizontal {\n  border-top: dashed 1px #ddd;\n  top: 50%;\n  width: 100%;\n  position: absolute;\n}\n.vertical {\n  border-left: dashed 1px #ddd;\n  left: 50%;\n  height: 100%;\n  position: absolute;\n}\n.labeled-input {\n  display: flex;\n  line-height: 30px;\n  margin-bottom: 5px;\n}\n.labeled-input > label {\n  width: 100px;\n  text-align: right;\n  padding-right: 10px;\n}\n.labeled-input > input {\n  width: 100%;\n}\n';
+var _user$project$Main$labeledInput = F2(
+	function (toMsg, str) {
 		return A2(
 			_elm_lang$html$Html$div,
 			{
 				ctor: '::',
-				_0: _elm_lang$html$Html_Attributes$class('param'),
+				_0: _elm_lang$html$Html_Attributes$classList(
+					{
+						ctor: '::',
+						_0: {ctor: '_Tuple2', _0: 'labeled-input', _1: true},
+						_1: {ctor: '[]'}
+					}),
 				_1: {ctor: '[]'}
 			},
 			{
@@ -8776,8 +8827,7 @@ var _user$project$Main$paramInput = F2(
 					{ctor: '[]'},
 					{
 						ctor: '::',
-						_0: _elm_lang$html$Html$text(
-							_elm_lang$core$Basics$toString(index)),
+						_0: _elm_lang$html$Html$text(str),
 						_1: {ctor: '[]'}
 					}),
 				_1: {
@@ -8786,8 +8836,7 @@ var _user$project$Main$paramInput = F2(
 						_elm_lang$html$Html$input,
 						{
 							ctor: '::',
-							_0: _elm_lang$html$Html_Events$onInput(
-								_user$project$Main$Input(index)),
+							_0: _elm_lang$html$Html_Events$onInput(toMsg),
 							_1: {ctor: '[]'}
 						},
 						{ctor: '[]'}),
@@ -8795,12 +8844,98 @@ var _user$project$Main$paramInput = F2(
 				}
 			});
 	});
-var _user$project$Main$form = function (model) {
+var _user$project$Main$toPositionList = function (array) {
+	return A2(
+		_elm_lang$core$List$filterMap,
+		function (list) {
+			var _p0 = list;
+			if ((_p0.ctor === '::') && (_p0._1.ctor === '::')) {
+				var _p1 = {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$String$toFloat(_p0._0),
+					_1: _elm_lang$core$String$toFloat(_p0._1._0)
+				};
+				if (((_p1.ctor === '_Tuple2') && (_p1._0.ctor === 'Ok')) && (_p1._1.ctor === 'Ok')) {
+					return _elm_lang$core$Maybe$Just(
+						A2(_user$project$SvgView$Position, _p1._0._0, _p1._1._0));
+				} else {
+					return _elm_lang$core$Maybe$Nothing;
+				}
+			} else {
+				return _elm_lang$core$Maybe$Nothing;
+			}
+		},
+		A2(
+			_elm_lang$core$List$map,
+			_elm_lang$core$String$split(','),
+			_elm_lang$core$Array$toList(array)));
+};
+var _user$project$Main$update = F2(
+	function (msg, model) {
+		var _p2 = msg;
+		if (_p2.ctor === 'Input') {
+			return _elm_lang$core$Native_Utils.update(
+				model,
+				{
+					positions: A3(_elm_lang$core$Array$set, _p2._0, _p2._1, model.positions)
+				});
+		} else {
+			return _elm_lang$core$Native_Utils.update(
+				model,
+				{rotation: _p2._0});
+		}
+	});
+var _user$project$Main$Model = F3(
+	function (a, b, c) {
+		return {dp: a, positions: b, rotation: c};
+	});
+var _user$project$Main$model = A3(
+	_user$project$Main$Model,
+	48,
+	_elm_lang$core$Array$fromList(
+		A2(_elm_lang$core$List$repeat, 10, '')),
+	_elm_lang$core$Maybe$Nothing);
+var _user$project$Main$Rotation = function (a) {
+	return {ctor: 'Rotation', _0: a};
+};
+var _user$project$Main$optionsForm = function (model) {
 	return A2(
 		_elm_lang$html$Html$div,
 		{
 			ctor: '::',
-			_0: _elm_lang$html$Html_Attributes$class('form'),
+			_0: _elm_lang$html$Html_Attributes$class('form-options'),
+			_1: {ctor: '[]'}
+		},
+		{
+			ctor: '::',
+			_0: A2(
+				_user$project$Main$labeledInput,
+				function (_p3) {
+					return _user$project$Main$Rotation(
+						_elm_lang$core$Result$toMaybe(
+							_elm_lang$core$String$toInt(_p3)));
+				},
+				'Rotation'),
+			_1: {ctor: '[]'}
+		});
+};
+var _user$project$Main$Input = F2(
+	function (a, b) {
+		return {ctor: 'Input', _0: a, _1: b};
+	});
+var _user$project$Main$paramInput = F2(
+	function (index, _p4) {
+		return A2(
+			_user$project$Main$labeledInput,
+			_user$project$Main$Input(index),
+			_elm_lang$core$Basics$toString(index));
+	});
+var _user$project$Main$positionsForm = function (model) {
+	return A2(
+		_elm_lang$html$Html$div,
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html_Attributes$class('form-positions'),
 			_1: {ctor: '[]'}
 		},
 		_elm_lang$core$Array$toList(
@@ -8816,22 +8951,30 @@ var _user$project$Main$container = function (model) {
 		},
 		{
 			ctor: '::',
-			_0: _user$project$Main$form(model),
+			_0: A3(
+				_elm_lang$html$Html$node,
+				'style',
+				{ctor: '[]'},
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html$text(_user$project$Main$styles),
+					_1: {ctor: '[]'}
+				}),
 			_1: {
 				ctor: '::',
-				_0: A2(_user$project$SvgView$view, model.dp, model.positions),
+				_0: _user$project$Main$optionsForm(model),
 				_1: {
 					ctor: '::',
-					_0: A3(
-						_elm_lang$html$Html$node,
-						'style',
-						{ctor: '[]'},
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html$text(_user$project$Main$styles),
-							_1: {ctor: '[]'}
-						}),
-					_1: {ctor: '[]'}
+					_0: _user$project$Main$positionsForm(model),
+					_1: {
+						ctor: '::',
+						_0: A3(
+							_user$project$SvgView$view,
+							model.dp,
+							model.rotation,
+							_user$project$Main$toPositionList(model.positions)),
+						_1: {ctor: '[]'}
+					}
 				}
 			}
 		});

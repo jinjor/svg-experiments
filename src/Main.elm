@@ -4,7 +4,7 @@ import Array exposing (Array)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import SvgView
+import SvgView exposing (Position)
 
 
 main : Program Never Model Msg
@@ -15,16 +15,18 @@ main =
 type alias Model =
   { dp : Int -- 18dp, 24dp, 36dp, 48dp
   , positions : Array String
+  , rotation : Maybe Int
   }
 
 
 model : Model
 model =
-  Model 48 (Array.fromList <| List.repeat 10 "")
+  Model 48 (Array.fromList <| List.repeat 10 "") Nothing
 
 
 type Msg
   = Input Int String
+  | Rotation (Maybe Int)
 
 
 update : Msg -> Model -> Model
@@ -32,6 +34,9 @@ update msg model =
   case msg of
     Input index value ->
       { model | positions = Array.set index value model.positions }
+
+    Rotation rotation ->
+      { model | rotation = rotation }
 
 
 view : Model -> Html Msg
@@ -45,24 +50,62 @@ view model =
 container : Model -> Html Msg
 container model =
   div [ class "container" ]
-    [ form model
-    , SvgView.view model.dp model.positions
-    , node "style" [] [ text styles ]
+    [ node "style" [] [ text styles ]
+    , optionsForm model
+    , positionsForm model
+    , SvgView.view model.dp model.rotation (toPositionList model.positions)
     ]
 
-form : Model -> Html Msg
-form model =
+
+toPositionList : Array String -> List Position
+toPositionList array =
+  array
+    |> Array.toList
+    |> List.map (String.split ",")
+    |> List.filterMap (\list ->
+      case list of
+        x :: y :: _ ->
+          case (String.toFloat x, String.toFloat y) of
+            (Ok x, Ok y) ->
+              Just (Position x y)
+
+            _ ->
+              Nothing
+
+        _ ->
+          Nothing
+      )
+
+
+positionsForm : Model -> Html Msg
+positionsForm model =
   model.positions
     |> Array.indexedMap (paramInput)
     |> Array.toList
-    |> div [ class "form" ]
+    |> div [ class "form-positions" ]
+
+
+optionsForm : Model -> Html Msg
+optionsForm model =
+  div
+    [ class "form-options" ]
+    [ labeledInput
+        (String.toInt >> Result.toMaybe >> Rotation)
+        "Rotation"
+    ]
 
 
 paramInput : Int -> String -> Html Msg
 paramInput index _ =
-  div [ class "param" ]
-    [ label [] [ text (toString index) ]
-    , input [ onInput (Input index) ] []
+  labeledInput (Input index) (toString index)
+
+
+labeledInput : (String -> msg) -> String -> Html msg
+labeledInput toMsg str =
+  div
+    [ classList [ ("labeled-input", True) ] ]
+    [ label [] [ text str ]
+    , input [ onInput toMsg ] []
     ]
 
 
@@ -74,8 +117,12 @@ styles = """
 .container > * {
   margin: 10px;
 }
-.form {
-  width: 30%;
+.form-positions {
+  width: 100px;
+  height: 100%;
+}
+.form-options {
+  width: 200px;
   height: 100%;
 }
 .svg-container {
@@ -100,17 +147,17 @@ svg {
   height: 100%;
   position: absolute;
 }
-.param {
+.labeled-input {
   display: flex;
   line-height: 30px;
   margin-bottom: 5px;
 }
-.param > label {
+.labeled-input > label {
   width: 100px;
   text-align: right;
   padding-right: 10px;
 }
-.param > input {
+.labeled-input > input {
   width: 100%;
 }
 """
