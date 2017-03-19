@@ -1,6 +1,7 @@
 module Main exposing (..)
 
 import Array exposing (Array)
+import Json.Decode as D
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -25,17 +26,25 @@ model =
 
 
 type Msg
-  = Input Int String
-  | Rotation (Maybe Int)
+  = NoOp
+  | InputPosition Int String
+  | InputDp Int
+  | InputRotation (Maybe Int)
 
 
 update : Msg -> Model -> Model
 update msg model =
   case msg of
-    Input index value ->
+    NoOp ->
+      model
+
+    InputPosition index value ->
       { model | positions = Array.set index value model.positions }
 
-    Rotation rotation ->
+    InputDp dp ->
+      { model | dp = dp }
+
+    InputRotation rotation ->
       { model | rotation = rotation }
 
 
@@ -80,7 +89,7 @@ toPositionList array =
 positionsForm : Model -> Html Msg
 positionsForm model =
   model.positions
-    |> Array.indexedMap (paramInput)
+    |> Array.indexedMap positionInput
     |> Array.toList
     |> div [ class "form-positions" ]
 
@@ -90,22 +99,27 @@ optionsForm model =
   div
     [ class "form-options" ]
     [ labeledInput
-        (String.toInt >> Result.toMaybe >> Rotation)
+        (String.toInt >> Result.toMaybe >> Maybe.map InputDp >> Maybe.withDefault NoOp)
+        "size"
+        (toString model.dp)
+    , labeledInput
+        (String.toInt >> Result.toMaybe >> InputRotation)
         "Rotation"
+        ""
     ]
 
 
-paramInput : Int -> String -> Html Msg
-paramInput index _ =
-  labeledInput (Input index) (toString index)
+positionInput : Int -> String -> Html Msg
+positionInput index _ =
+  labeledInput (InputPosition index) (toString index) ""
 
 
-labeledInput : (String -> msg) -> String -> Html msg
-labeledInput toMsg str =
+labeledInput : (String -> msg) -> String -> String -> Html msg
+labeledInput toMsg labelText val =
   div
     [ classList [ ("labeled-input", True) ] ]
-    [ label [] [ text str ]
-    , input [ onInput toMsg ] []
+    [ label [] [ text labelText ]
+    , input [ onInput toMsg, defaultValue val ] []
     ]
 
 
@@ -125,13 +139,10 @@ styles = """
   width: 200px;
   height: 100%;
 }
-.svg-container {
+.svg {
   border: solid 1px #aaa;
-  position: relative;
-  width: 200px;
-  height: 200px;
 }
-svg {
+.svg.editor {
   width: 200px;
   height: 200px;
 }

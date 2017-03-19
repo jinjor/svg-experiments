@@ -8616,63 +8616,132 @@ var _user$project$SvgView$toFixed = function (_p0) {
 						10.0,
 						_p0)))));
 };
-var _user$project$SvgView$formatPath = function (positions) {
-	return (_elm_lang$core$Native_Utils.cmp(
-		_elm_lang$core$List$length(positions),
-		2) < 0) ? '' : A3(
-		_elm_lang$core$Basics$flip,
-		F2(
-			function (x, y) {
-				return A2(_elm_lang$core$Basics_ops['++'], x, y);
-			}),
-		'z',
-		A2(
-			_elm_lang$core$String$join,
-			'',
+var _user$project$SvgView$formatPath = F2(
+	function (shift, positions) {
+		return (_elm_lang$core$Native_Utils.cmp(
+			_elm_lang$core$List$length(positions),
+			2) < 0) ? '' : A3(
+			_elm_lang$core$Basics$flip,
+			F2(
+				function (x, y) {
+					return A2(_elm_lang$core$Basics_ops['++'], x, y);
+				}),
+			'z',
 			A2(
-				_elm_lang$core$List$indexedMap,
-				F2(
-					function (index, pos) {
-						return A2(
-							_elm_lang$core$Basics_ops['++'],
-							_elm_lang$core$Native_Utils.eq(index, 0) ? 'M' : 'L',
-							A2(
+				_elm_lang$core$String$join,
+				'',
+				A2(
+					_elm_lang$core$List$indexedMap,
+					F2(
+						function (index, pos) {
+							return A2(
 								_elm_lang$core$Basics_ops['++'],
-								_user$project$SvgView$toFixed(pos.x),
+								_elm_lang$core$Native_Utils.eq(index, 0) ? 'M' : 'L',
 								A2(
 									_elm_lang$core$Basics_ops['++'],
-									',',
-									_user$project$SvgView$toFixed(pos.y))));
-					}),
-				positions)));
-};
-var _user$project$SvgView$viewBoxValue = function (dp) {
-	return A2(
-		_elm_lang$core$String$join,
-		' ',
-		A2(
-			_elm_lang$core$List$map,
-			_elm_lang$core$Basics$toString,
-			{
-				ctor: '::',
-				_0: ((0 - dp) / 2) | 0,
-				_1: {
+									_user$project$SvgView$toFixed(shift.x + pos.x),
+									A2(
+										_elm_lang$core$Basics_ops['++'],
+										',',
+										_user$project$SvgView$toFixed(shift.y + pos.y))));
+						}),
+					positions)));
+	});
+var _user$project$SvgView$viewBoxValue = F2(
+	function (editor, dp) {
+		return A2(
+			_elm_lang$core$String$join,
+			' ',
+			A2(
+				_elm_lang$core$List$map,
+				_elm_lang$core$Basics$toString,
+				editor ? {
 					ctor: '::',
 					_0: ((0 - dp) / 2) | 0,
 					_1: {
 						ctor: '::',
-						_0: dp,
+						_0: ((0 - dp) / 2) | 0,
 						_1: {
 							ctor: '::',
 							_0: dp,
-							_1: {ctor: '[]'}
+							_1: {
+								ctor: '::',
+								_0: dp,
+								_1: {ctor: '[]'}
+							}
+						}
+					}
+				} : {
+					ctor: '::',
+					_0: 0,
+					_1: {
+						ctor: '::',
+						_0: 0,
+						_1: {
+							ctor: '::',
+							_0: dp,
+							_1: {
+								ctor: '::',
+								_0: dp,
+								_1: {ctor: '[]'}
+							}
+						}
+					}
+				}));
+	});
+var _user$project$SvgView$guideLine = F2(
+	function (vertical, dp) {
+		return A2(
+			_elm_lang$svg$Svg$path,
+			{
+				ctor: '::',
+				_0: _elm_lang$svg$Svg_Attributes$stroke('#ddd'),
+				_1: {
+					ctor: '::',
+					_0: _elm_lang$svg$Svg_Attributes$strokeWidth(
+						_user$project$SvgView$toFixed(
+							_elm_lang$core$Basics$toFloat(dp) / 200)),
+					_1: {
+						ctor: '::',
+						_0: _elm_lang$svg$Svg_Attributes$strokeDasharray('1'),
+						_1: {
+							ctor: '::',
+							_0: _elm_lang$svg$Svg_Attributes$strokeDashoffset('0.5'),
+							_1: {
+								ctor: '::',
+								_0: vertical ? _elm_lang$svg$Svg_Attributes$d(
+									A2(
+										_elm_lang$core$Basics_ops['++'],
+										'M0,',
+										A2(
+											_elm_lang$core$Basics_ops['++'],
+											_elm_lang$core$Basics$toString(((0 - dp) / 2) | 0),
+											A2(
+												_elm_lang$core$Basics_ops['++'],
+												'V',
+												_elm_lang$core$Basics$toString(dp))))) : _elm_lang$svg$Svg_Attributes$d(
+									A2(
+										_elm_lang$core$Basics_ops['++'],
+										'M',
+										A2(
+											_elm_lang$core$Basics_ops['++'],
+											_elm_lang$core$Basics$toString(((0 - dp) / 2) | 0),
+											A2(
+												_elm_lang$core$Basics_ops['++'],
+												',0H',
+												_elm_lang$core$Basics$toString(dp))))),
+								_1: {ctor: '[]'}
+							}
 						}
 					}
 				}
-			}));
-};
-var _user$project$SvgView$viewSvg = F2(
-	function (dp, pathString) {
+			},
+			{ctor: '[]'});
+	});
+var _user$project$SvgView$vertical = _user$project$SvgView$guideLine(true);
+var _user$project$SvgView$horizontal = _user$project$SvgView$guideLine(false);
+var _user$project$SvgView$viewSvg = F3(
+	function (editor, dp, pathString) {
 		return A2(
 			_elm_lang$svg$Svg$svg,
 			{
@@ -8686,11 +8755,16 @@ var _user$project$SvgView$viewSvg = F2(
 					_1: {
 						ctor: '::',
 						_0: _elm_lang$svg$Svg_Attributes$viewBox(
-							_user$project$SvgView$viewBoxValue(dp)),
+							A2(_user$project$SvgView$viewBoxValue, editor, dp)),
 						_1: {
 							ctor: '::',
 							_0: _elm_lang$svg$Svg_Attributes$preserveAspectRatio('none'),
-							_1: {ctor: '[]'}
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$svg$Svg_Attributes$class(
+									editor ? 'svg editor' : 'svg preview'),
+								_1: {ctor: '[]'}
+							}
 						}
 					}
 				}
@@ -8709,25 +8783,17 @@ var _user$project$SvgView$viewSvg = F2(
 						}
 					},
 					{ctor: '[]'}),
-				_1: {ctor: '[]'}
+				_1: editor ? {
+					ctor: '::',
+					_0: _user$project$SvgView$horizontal(dp),
+					_1: {
+						ctor: '::',
+						_0: _user$project$SvgView$vertical(dp),
+						_1: {ctor: '[]'}
+					}
+				} : {ctor: '[]'}
 			});
 	});
-var _user$project$SvgView$vertical = A2(
-	_elm_lang$html$Html$div,
-	{
-		ctor: '::',
-		_0: _elm_lang$html$Html_Attributes$class('vertical'),
-		_1: {ctor: '[]'}
-	},
-	{ctor: '[]'});
-var _user$project$SvgView$horizontal = A2(
-	_elm_lang$html$Html$div,
-	{
-		ctor: '::',
-		_0: _elm_lang$html$Html_Attributes$class('horizontal'),
-		_1: {ctor: '[]'}
-	},
-	{ctor: '[]'});
 var _user$project$SvgView$Position = F2(
 	function (a, b) {
 		return {x: a, y: b};
@@ -8768,46 +8834,77 @@ var _user$project$SvgView$copyRotation = F2(
 	});
 var _user$project$SvgView$view = F3(
 	function (dp, rotation, positions) {
-		var pathString = _user$project$SvgView$formatPath(
+		var pathStringShifted = A2(
+			_user$project$SvgView$formatPath,
+			A2(
+				_user$project$SvgView$Position,
+				_elm_lang$core$Basics$toFloat((dp / 2) | 0),
+				_elm_lang$core$Basics$toFloat((dp / 2) | 0)),
 			A2(
 				_user$project$SvgView$copyRotation,
 				A2(_elm_lang$core$Maybe$withDefault, 1, rotation),
 				positions));
-		return A2(
+		var preview = A2(
 			_elm_lang$html$Html$div,
+			{ctor: '[]'},
 			{
 				ctor: '::',
-				_0: _elm_lang$html$Html_Attributes$class('svg-container'),
-				_1: {ctor: '[]'}
-			},
-			{
-				ctor: '::',
-				_0: _user$project$SvgView$horizontal,
+				_0: A3(_user$project$SvgView$viewSvg, false, dp, pathStringShifted),
 				_1: {
 					ctor: '::',
-					_0: _user$project$SvgView$vertical,
-					_1: {
-						ctor: '::',
-						_0: A2(_user$project$SvgView$viewSvg, dp, pathString),
-						_1: {
+					_0: A2(
+						_elm_lang$html$Html$div,
+						{ctor: '[]'},
+						{
 							ctor: '::',
-							_0: A2(
-								_elm_lang$html$Html$div,
-								{ctor: '[]'},
-								{
-									ctor: '::',
-									_0: _elm_lang$svg$Svg$text(pathString),
-									_1: {ctor: '[]'}
-								}),
+							_0: _elm_lang$svg$Svg$text(pathStringShifted),
 							_1: {ctor: '[]'}
-						}
-					}
+						}),
+					_1: {ctor: '[]'}
+				}
+			});
+		var pathString = A2(
+			_user$project$SvgView$formatPath,
+			A2(_user$project$SvgView$Position, 0, 0),
+			A2(
+				_user$project$SvgView$copyRotation,
+				A2(_elm_lang$core$Maybe$withDefault, 1, rotation),
+				positions));
+		var editor = A2(
+			_elm_lang$html$Html$div,
+			{ctor: '[]'},
+			{
+				ctor: '::',
+				_0: A3(_user$project$SvgView$viewSvg, true, dp, pathString),
+				_1: {
+					ctor: '::',
+					_0: A2(
+						_elm_lang$html$Html$div,
+						{ctor: '[]'},
+						{
+							ctor: '::',
+							_0: _elm_lang$svg$Svg$text(pathString),
+							_1: {ctor: '[]'}
+						}),
+					_1: {ctor: '[]'}
+				}
+			});
+		return A2(
+			_elm_lang$html$Html$div,
+			{ctor: '[]'},
+			{
+				ctor: '::',
+				_0: editor,
+				_1: {
+					ctor: '::',
+					_0: preview,
+					_1: {ctor: '[]'}
 				}
 			});
 	});
-var _user$project$Main$styles = '\n.container {\n  display: flex;\n}\n.container > * {\n  margin: 10px;\n}\n.form-positions {\n  width: 100px;\n  height: 100%;\n}\n.form-options {\n  width: 200px;\n  height: 100%;\n}\n.svg-container {\n  border: solid 1px #aaa;\n  position: relative;\n  width: 200px;\n  height: 200px;\n}\nsvg {\n  width: 200px;\n  height: 200px;\n}\n.horizontal {\n  border-top: dashed 1px #ddd;\n  top: 50%;\n  width: 100%;\n  position: absolute;\n}\n.vertical {\n  border-left: dashed 1px #ddd;\n  left: 50%;\n  height: 100%;\n  position: absolute;\n}\n.labeled-input {\n  display: flex;\n  line-height: 30px;\n  margin-bottom: 5px;\n}\n.labeled-input > label {\n  width: 100px;\n  text-align: right;\n  padding-right: 10px;\n}\n.labeled-input > input {\n  width: 100%;\n}\n';
-var _user$project$Main$labeledInput = F2(
-	function (toMsg, str) {
+var _user$project$Main$styles = '\n.container {\n  display: flex;\n}\n.container > * {\n  margin: 10px;\n}\n.form-positions {\n  width: 100px;\n  height: 100%;\n}\n.form-options {\n  width: 200px;\n  height: 100%;\n}\n.svg {\n  border: solid 1px #aaa;\n}\n.svg.editor {\n  width: 200px;\n  height: 200px;\n}\n.horizontal {\n  border-top: dashed 1px #ddd;\n  top: 50%;\n  width: 100%;\n  position: absolute;\n}\n.vertical {\n  border-left: dashed 1px #ddd;\n  left: 50%;\n  height: 100%;\n  position: absolute;\n}\n.labeled-input {\n  display: flex;\n  line-height: 30px;\n  margin-bottom: 5px;\n}\n.labeled-input > label {\n  width: 100px;\n  text-align: right;\n  padding-right: 10px;\n}\n.labeled-input > input {\n  width: 100%;\n}\n';
+var _user$project$Main$labeledInput = F3(
+	function (toMsg, labelText, val) {
 		return A2(
 			_elm_lang$html$Html$div,
 			{
@@ -8827,7 +8924,7 @@ var _user$project$Main$labeledInput = F2(
 					{ctor: '[]'},
 					{
 						ctor: '::',
-						_0: _elm_lang$html$Html$text(str),
+						_0: _elm_lang$html$Html$text(labelText),
 						_1: {ctor: '[]'}
 					}),
 				_1: {
@@ -8837,7 +8934,11 @@ var _user$project$Main$labeledInput = F2(
 						{
 							ctor: '::',
 							_0: _elm_lang$html$Html_Events$onInput(toMsg),
-							_1: {ctor: '[]'}
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$html$Html_Attributes$defaultValue(val),
+								_1: {ctor: '[]'}
+							}
 						},
 						{ctor: '[]'}),
 					_1: {ctor: '[]'}
@@ -8873,16 +8974,23 @@ var _user$project$Main$toPositionList = function (array) {
 var _user$project$Main$update = F2(
 	function (msg, model) {
 		var _p2 = msg;
-		if (_p2.ctor === 'Input') {
-			return _elm_lang$core$Native_Utils.update(
-				model,
-				{
-					positions: A3(_elm_lang$core$Array$set, _p2._0, _p2._1, model.positions)
-				});
-		} else {
-			return _elm_lang$core$Native_Utils.update(
-				model,
-				{rotation: _p2._0});
+		switch (_p2.ctor) {
+			case 'NoOp':
+				return model;
+			case 'InputPosition':
+				return _elm_lang$core$Native_Utils.update(
+					model,
+					{
+						positions: A3(_elm_lang$core$Array$set, _p2._0, _p2._1, model.positions)
+					});
+			case 'InputDp':
+				return _elm_lang$core$Native_Utils.update(
+					model,
+					{dp: _p2._0});
+			default:
+				return _elm_lang$core$Native_Utils.update(
+					model,
+					{rotation: _p2._0});
 		}
 	});
 var _user$project$Main$Model = F3(
@@ -8895,40 +9003,23 @@ var _user$project$Main$model = A3(
 	_elm_lang$core$Array$fromList(
 		A2(_elm_lang$core$List$repeat, 10, '')),
 	_elm_lang$core$Maybe$Nothing);
-var _user$project$Main$Rotation = function (a) {
-	return {ctor: 'Rotation', _0: a};
+var _user$project$Main$InputRotation = function (a) {
+	return {ctor: 'InputRotation', _0: a};
 };
-var _user$project$Main$optionsForm = function (model) {
-	return A2(
-		_elm_lang$html$Html$div,
-		{
-			ctor: '::',
-			_0: _elm_lang$html$Html_Attributes$class('form-options'),
-			_1: {ctor: '[]'}
-		},
-		{
-			ctor: '::',
-			_0: A2(
-				_user$project$Main$labeledInput,
-				function (_p3) {
-					return _user$project$Main$Rotation(
-						_elm_lang$core$Result$toMaybe(
-							_elm_lang$core$String$toInt(_p3)));
-				},
-				'Rotation'),
-			_1: {ctor: '[]'}
-		});
+var _user$project$Main$InputDp = function (a) {
+	return {ctor: 'InputDp', _0: a};
 };
-var _user$project$Main$Input = F2(
+var _user$project$Main$InputPosition = F2(
 	function (a, b) {
-		return {ctor: 'Input', _0: a, _1: b};
+		return {ctor: 'InputPosition', _0: a, _1: b};
 	});
-var _user$project$Main$paramInput = F2(
-	function (index, _p4) {
-		return A2(
+var _user$project$Main$positionInput = F2(
+	function (index, _p3) {
+		return A3(
 			_user$project$Main$labeledInput,
-			_user$project$Main$Input(index),
-			_elm_lang$core$Basics$toString(index));
+			_user$project$Main$InputPosition(index),
+			_elm_lang$core$Basics$toString(index),
+			'');
 	});
 var _user$project$Main$positionsForm = function (model) {
 	return A2(
@@ -8939,7 +9030,47 @@ var _user$project$Main$positionsForm = function (model) {
 			_1: {ctor: '[]'}
 		},
 		_elm_lang$core$Array$toList(
-			A2(_elm_lang$core$Array$indexedMap, _user$project$Main$paramInput, model.positions)));
+			A2(_elm_lang$core$Array$indexedMap, _user$project$Main$positionInput, model.positions)));
+};
+var _user$project$Main$NoOp = {ctor: 'NoOp'};
+var _user$project$Main$optionsForm = function (model) {
+	return A2(
+		_elm_lang$html$Html$div,
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html_Attributes$class('form-options'),
+			_1: {ctor: '[]'}
+		},
+		{
+			ctor: '::',
+			_0: A3(
+				_user$project$Main$labeledInput,
+				function (_p4) {
+					return A2(
+						_elm_lang$core$Maybe$withDefault,
+						_user$project$Main$NoOp,
+						A2(
+							_elm_lang$core$Maybe$map,
+							_user$project$Main$InputDp,
+							_elm_lang$core$Result$toMaybe(
+								_elm_lang$core$String$toInt(_p4))));
+				},
+				'size',
+				_elm_lang$core$Basics$toString(model.dp)),
+			_1: {
+				ctor: '::',
+				_0: A3(
+					_user$project$Main$labeledInput,
+					function (_p5) {
+						return _user$project$Main$InputRotation(
+							_elm_lang$core$Result$toMaybe(
+								_elm_lang$core$String$toInt(_p5)));
+					},
+					'Rotation',
+					''),
+				_1: {ctor: '[]'}
+			}
+		});
 };
 var _user$project$Main$container = function (model) {
 	return A2(

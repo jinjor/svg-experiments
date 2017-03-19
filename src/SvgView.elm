@@ -18,15 +18,26 @@ view : Int -> Maybe Int -> List Position -> Svg msg
 view dp rotation positions =
   let
     pathString =
-      formatPath (copyRotation (Maybe.withDefault 1 rotation) positions)
+      formatPath (Position 0 0) (copyRotation (Maybe.withDefault 1 rotation) positions)
+
+    pathStringShifted =
+      formatPath (Position (toFloat <| dp//2) (toFloat <| dp//2)) (copyRotation (Maybe.withDefault 1 rotation) positions)
+
+    editor =
+      H.div
+        []
+        [ viewSvg True dp pathString
+        , H.div [] [ text pathString ]
+        ]
+
+    preview =
+      H.div
+        []
+        [ viewSvg False dp pathStringShifted
+        , H.div [] [ text pathStringShifted ]
+        ]
   in
-    H.div
-      [ A.class "svg-container" ]
-      [ horizontal
-      , vertical
-      , viewSvg dp pathString
-      , H.div [] [ text pathString ]
-      ]
+    H.div [] [ editor, preview ]
 
 
 copyRotation : Int -> List Position -> List Position
@@ -47,42 +58,63 @@ rotate theta { x, y } =
     (x * sin theta + y * cos theta)
 
 
-horizontal : Svg msg
-horizontal =
-  H.div [ A.class "horizontal" ] []
-
-
-vertical : Svg msg
-vertical =
-  H.div [ A.class "vertical" ] []
-
-
-viewSvg : Int -> String -> Svg msg
-viewSvg dp pathString =
+viewSvg : Bool -> Int -> String -> Svg msg
+viewSvg editor dp pathString =
   svg
     [ width (toString dp)
     , height (toString dp)
-    , viewBox (viewBoxValue dp)
+    , viewBox (viewBoxValue editor dp)
     , preserveAspectRatio "none"
+    , class (if editor  then "svg editor" else "svg preview")
     ]
-    [ Svg.path [ stroke "black", d pathString ] [] ]
+    ( Svg.path [ stroke "black", d pathString ] [] ::
+      ( if editor then [ horizontal dp, vertical dp ] else [] )
+    )
 
 
-viewBoxValue : Int -> String
-viewBoxValue dp =
-  [ -dp // 2, -dp // 2, dp, dp ]
+horizontal : Int -> Svg msg
+horizontal =
+  guideLine False
+
+
+vertical : Int -> Svg msg
+vertical =
+  guideLine True
+
+
+guideLine : Bool -> Int -> Svg msg
+guideLine vertical dp =
+  Svg.path
+    [ stroke "#ddd"
+    , strokeWidth (toFixed <| toFloat dp/200)
+    , strokeDasharray "1"
+    , strokeDashoffset "0.5"
+    , if vertical then
+        d ("M0," ++ toString (-dp//2) ++  "V" ++ toString dp)
+      else
+        d ("M" ++ toString (-dp//2) ++  ",0H" ++ toString dp)
+    ] []
+
+
+viewBoxValue : Bool -> Int -> String
+viewBoxValue editor dp =
+  ( if editor then
+      [ -dp // 2, -dp // 2, dp, dp ]
+    else
+      [ 0, 0, dp, dp ]
+  )
     |> List.map toString
     |> String.join " "
 
 
-formatPath : List Position -> String
-formatPath positions =
+formatPath : Position -> List Position -> String
+formatPath shift positions =
   if List.length positions < 2 then
     ""
   else
     positions
       |> List.indexedMap (\index pos ->
-          (if index == 0 then "M" else "L") ++ toFixed pos.x ++ "," ++ toFixed pos.y
+          (if index == 0 then "M" else "L") ++ toFixed (shift.x + pos.x) ++ "," ++ toFixed (shift.y + pos.y)
         )
       |> String.join ""
       |> (flip (++) "z")
