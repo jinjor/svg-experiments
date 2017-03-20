@@ -25,7 +25,7 @@ type alias Model =
 
 init : Model
 init =
-  Model 48 (Array.fromList <| List.repeat 5 Layer.init) 0
+  Model 48 (Array.fromList <| List.repeat 8 Layer.init) 0
 
 
 type Msg

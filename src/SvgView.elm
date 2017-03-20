@@ -64,7 +64,7 @@ copyRotation rotation positions =
     theta =
       (2 * pi) / toFloat rotation
   in
-    List.range 0 (rotation - 1)
+    List.range 0 (abs rotation - 1)
       |> List.map (toFloat >> (*) theta)
       |> List.concatMap (\theta -> List.map (rotate theta) positions)
 
@@ -85,7 +85,7 @@ viewSvg editor dp pathString =
     , preserveAspectRatio "none"
     , class (if editor  then "svg editor" else "svg preview")
     ]
-    ( Svg.path [ stroke "black", d pathString ] [] ::
+    ( Svg.path [ stroke "black", fillRule "nonzero", d pathString ] [] ::
       ( if editor then [ horizontal dp, vertical dp ] else [] )
     )
 

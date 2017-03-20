@@ -8957,8 +8957,12 @@ var _user$project$SvgView$viewSvg = F3(
 						_0: _elm_lang$svg$Svg_Attributes$stroke('black'),
 						_1: {
 							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$d(pathString),
-							_1: {ctor: '[]'}
+							_0: _elm_lang$svg$Svg_Attributes$fillRule('nonzero'),
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$svg$Svg_Attributes$d(pathString),
+								_1: {ctor: '[]'}
+							}
 						}
 					},
 					{ctor: '[]'}),
@@ -9005,7 +9009,10 @@ var _user$project$SvgView$copyRotation = F2(
 						theta,
 						_elm_lang$core$Basics$toFloat(_p5));
 				},
-				A2(_elm_lang$core$List$range, 0, rotation - 1)));
+				A2(
+					_elm_lang$core$List$range,
+					0,
+					_elm_lang$core$Basics$abs(rotation) - 1)));
 	});
 var _user$project$SvgView$getPositions = function (layer) {
 	return A2(
@@ -9146,7 +9153,7 @@ var _user$project$Main$init = A3(
 	_user$project$Main$Model,
 	48,
 	_elm_lang$core$Array$fromList(
-		A2(_elm_lang$core$List$repeat, 5, _user$project$Layer$init)),
+		A2(_elm_lang$core$List$repeat, 8, _user$project$Layer$init)),
 	0);
 var _user$project$Main$SelectLayer = function (a) {
 	return {ctor: 'SelectLayer', _0: a};
