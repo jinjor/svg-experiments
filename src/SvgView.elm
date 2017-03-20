@@ -6,22 +6,40 @@ import Html.Attributes as A
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
 import Svg.Events exposing (..)
+import Layer exposing (Layer, Position)
 
 
-type alias Position =
-  { x : Float
-  , y : Float
-  }
+noShift : Position
+noShift =
+  Position 0 0
 
 
-view : Int -> Maybe Int -> List Position -> Svg msg
-view dp rotation positions =
+shift : Int -> Position
+shift dp =
+  Position (toFloat <| dp//2) (toFloat <| dp//2)
+
+
+getPositions : Layer -> List Position
+getPositions layer =
+  layer.positions
+    |> Array.toList
+    |> List.filterMap identity
+
+
+view : Int -> Array Layer -> Svg msg
+view dp layers =
   let
     pathString =
-      formatPath (Position 0 0) (copyRotation (Maybe.withDefault 1 rotation) positions)
+      layers
+        |> Array.toList
+        |> List.map (\layer -> formatPath noShift (copyRotation (Maybe.withDefault 1 layer.rotation) (getPositions layer)))
+        |> String.join ""
 
     pathStringShifted =
-      formatPath (Position (toFloat <| dp//2) (toFloat <| dp//2)) (copyRotation (Maybe.withDefault 1 rotation) positions)
+      layers
+        |> Array.toList
+        |> List.map (\layer -> formatPath (shift dp) (copyRotation (Maybe.withDefault 1 layer.rotation) (getPositions layer)))
+        |> String.join ""
 
     editor =
       H.div

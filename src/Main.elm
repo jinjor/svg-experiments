@@ -5,31 +5,34 @@ import Json.Decode as D
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import SvgView exposing (Position)
+import Html.Keyed as Keyed
+import SvgView
+import Layer exposing (Layer)
+import UI exposing (..)
 
 
 main : Program Never Model Msg
 main =
-  beginnerProgram { model = model, view = view, update = update }
+  beginnerProgram { model = init, view = view, update = update }
 
 
 type alias Model =
   { dp : Int -- 18dp, 24dp, 36dp, 48dp
-  , positions : Array String
-  , rotation : Maybe Int
+  , layers : Array Layer
+  , selectedLayer : Int
   }
 
 
-model : Model
-model =
-  Model 48 (Array.fromList <| List.repeat 10 "") Nothing
+init : Model
+init =
+  Model 48 (Array.fromList <| List.repeat 5 Layer.init) 0
 
 
 type Msg
   = NoOp
-  | InputPosition Int String
   | InputDp Int
-  | InputRotation (Maybe Int)
+  | UpdateLayer Int Layer.Msg
+  | SelectLayer Int
 
 
 update : Msg -> Model -> Model
@@ -38,14 +41,21 @@ update msg model =
     NoOp ->
       model
 
-    InputPosition index value ->
-      { model | positions = Array.set index value model.positions }
-
     InputDp dp ->
       { model | dp = dp }
 
-    InputRotation rotation ->
-      { model | rotation = rotation }
+    UpdateLayer layerIndex msg ->
+      { model
+          | layers =
+              model.layers
+                |> Array.get layerIndex
+                |> Maybe.map (Layer.update msg)
+                |> Maybe.map (\layer -> Array.set layerIndex layer model.layers)
+                |> Maybe.withDefault model.layers
+      }
+
+    SelectLayer index ->
+      { model | selectedLayer = index }
 
 
 view : Model -> Html Msg
@@ -60,67 +70,46 @@ container : Model -> Html Msg
 container model =
   div [ class "container" ]
     [ node "style" [] [ text styles ]
-    , optionsForm model
-    , positionsForm model
-    , SvgView.view model.dp model.rotation (toPositionList model.positions)
+    , globalOptionForm model
+    , layerForms model.selectedLayer model.layers
+    , SvgView.view model.dp model.layers
     ]
 
 
-toPositionList : Array String -> List Position
-toPositionList array =
-  array
-    |> Array.toList
-    |> List.map (String.split ",")
-    |> List.filterMap (\list ->
-      case list of
-        x :: y :: _ ->
-          case (String.toFloat x, String.toFloat y) of
-            (Ok x, Ok y) ->
-              Just (Position x y)
-
-            _ ->
-              Nothing
-
-        _ ->
-          Nothing
-      )
-
-
-positionsForm : Model -> Html Msg
-positionsForm model =
-  model.positions
-    |> Array.indexedMap positionInput
-    |> Array.toList
-    |> div [ class "form-positions" ]
-
-
-optionsForm : Model -> Html Msg
-optionsForm model =
-  div
-    [ class "form-options" ]
+globalOptionForm : Model -> Html Msg
+globalOptionForm model =
+  div [ class "global-options" ]
     [ labeledInput
         (String.toInt >> Result.toMaybe >> Maybe.map InputDp >> Maybe.withDefault NoOp)
         "size"
         (toString model.dp)
-    , labeledInput
-        (String.toInt >> Result.toMaybe >> InputRotation)
-        "Rotation"
-        ""
+    , layerSelect (Array.length model.layers) model.selectedLayer
     ]
 
 
-positionInput : Int -> String -> Html Msg
-positionInput index _ =
-  labeledInput (InputPosition index) (toString index) ""
+layerSelect : Int -> Int -> Html Msg
+layerSelect length selectedLayer =
+  div []
+    ( List.range 0 (length - 1)
+        |> List.map (layerOption selectedLayer)
+    )
 
 
-labeledInput : (String -> msg) -> String -> String -> Html msg
-labeledInput toMsg labelText val =
+layerOption : Int -> Int -> Html Msg
+layerOption selectedLayer index =
   div
-    [ classList [ ("labeled-input", True) ] ]
-    [ label [] [ text labelText ]
-    , input [ onInput toMsg, defaultValue val ] []
+    [ onClick (SelectLayer index)
+    , classList [ ("layer-option", True), ("layer-option-selected", index == selectedLayer) ]
     ]
+    [ text ("Layer " ++ toString (index + 1)) ]
+
+
+layerForms : Int -> Array Layer -> Html Msg
+layerForms selectedLayer layers =
+  Array.get selectedLayer layers
+    |> Maybe.map (\layer -> [ (toString selectedLayer, Layer.form layer |> Html.map (UpdateLayer selectedLayer)) ] )
+    |> Maybe.withDefault []
+    |> Keyed.node "div" []
 
 
 styles : String
@@ -131,11 +120,20 @@ styles = """
 .container > * {
   margin: 10px;
 }
-.form-positions {
-  width: 100px;
-  height: 100%;
+.global-options {
+  width: 150px;
 }
-.form-options {
+.layer-option {
+  background-color: #eee;
+  line-height: 30px;
+  margin-bottom: 4px;
+  border-radius: 3px;
+  padding-left: 10px;
+}
+.layer-option-selected {
+  background-color: #68d;
+}
+.layer-form {
   width: 200px;
   height: 100%;
 }
